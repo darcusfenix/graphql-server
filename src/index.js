@@ -1,3 +1,5 @@
+require('dotenv').config();
+
 import express from 'express';
 import bodyParser from 'body-parser';
 import fetch from 'node-fetch';
@@ -5,27 +7,30 @@ import { Engine } from 'apollo-engine';
 import { graphqlExpress, graphiqlExpress } from 'apollo-server-express';
 import { makeExecutableSchema } from 'graphql-tools';
 
+const env = process.env;
+
 const engine = new Engine({
     engineConfig: {
-        apiKey: 'service:gh-darcusfenix:Gk5uIuiw0mYT1yDe8JR6Rw',
+        apiKey: env.APOLLO_CLIENT_KEY,
         logging: {
             level: 'DEBUG'
         }
     },
-    graphqlPort: process.env.PORT || 3000,
+    graphqlPort: env.APOLLO_CLIENT_PORT,
     dumpTraffic: true
 });
-
-// engine.start();
+if (env.NODE_ENV === "production"){
+  engine.start();
+}
 
 const getPosts = () => {
-    return fetch("http://crisostomo.soy/api/posts")
+  return fetch(`${env.BASE_URL}${env.END_POINT_POST}`)
         .then(res => res.json())
         .then(json => json);
 };
 
 const getPostById = (root, params) => {
-  return fetch(`http://crisostomo.soy/api/posts/${params.id}`)
+  return fetch(`${env.BASE_URL}${env.END_POINT_POST}/${params.id}`)
         .then(res => res.json())
         .then(json => json);
 };
@@ -72,14 +77,14 @@ const app = express();
 
 app.use(engine.expressMiddleware());
 
-app.use('/graphql', bodyParser.json(), graphqlExpress({ schema }));
+app.use(env.END_POINT_GRAPHQL, bodyParser.json(), graphqlExpress({ schema }));
 
-app.use('/graphiql', graphiqlExpress({
-    endpointURL: '/graphql',
+app.use(env.END_POINT_GRAPHIQL, graphiqlExpress({
+    endpointURL: env.END_POINT_GRAPHQL,
     tracing: true,
     cacheControl: true
 }));
 
-app.listen(3000, () => {
-    console.log('Go to http://localhost:3000/graphiql to run queries!');
+app.listen(env.EXPRESS_PORT, () => {
+    console.log(`Running apollo server at port: ${env.EXPRESS_PORT}`);
 });
