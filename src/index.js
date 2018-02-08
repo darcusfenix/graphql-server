@@ -2,8 +2,8 @@ import express from 'express';
 import bodyParser from 'body-parser';
 import fetch from 'node-fetch';
 import { Engine } from 'apollo-engine';
-const { graphqlExpress, graphiqlExpress } = require('apollo-server-express');
-const { makeExecutableSchema } = require('graphql-tools');
+import { graphqlExpress, graphiqlExpress } from 'apollo-server-express';
+import { makeExecutableSchema } from 'graphql-tools';
 
 const engine = new Engine({
     engineConfig: {
@@ -16,7 +16,7 @@ const engine = new Engine({
     dumpTraffic: true
 });
 
-engine.start();
+// engine.start();
 
 const getPosts = () => {
     return fetch("http://crisostomo.soy/api/posts")
@@ -24,8 +24,17 @@ const getPosts = () => {
         .then(json => json);
 };
 
+const getPostById = (root, params) => {
+  return fetch(`http://crisostomo.soy/api/posts/${params.id}`)
+        .then(res => res.json())
+        .then(json => json);
+};
+
 const typeDefs = `
-  type Query { posts: [Post] }
+  type Query { 
+    posts: [Post],
+    post(id: String!): Post
+  }
  
   type Post { 
     _id: String, 
@@ -35,7 +44,7 @@ const typeDefs = `
     date: String,
     totalShared: String,
     imgMedium: String,
-    content: [Paragraph],
+    content: [Paragraph]!
   }
   
   type Paragraph { 
@@ -48,8 +57,11 @@ const typeDefs = `
 `;
 
 const resolvers = {
-        Query: { posts: () => getPosts() },
-    };
+    Query: {
+      posts: getPosts,
+      post: getPostById,
+    }
+};
 
 const schema = makeExecutableSchema({
     typeDefs,
