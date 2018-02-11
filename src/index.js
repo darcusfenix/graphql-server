@@ -29,6 +29,15 @@ const getPosts = () => {
         .then(json => json);
 };
 
+const getSocial = () => {
+  return fetch(`${env.BASE_URL}${env.END_POINT_SOCIAL}?active=true`)
+        .then(res => res.json())
+        .then(json => {
+          console.log(json)
+          return json
+  });
+};
+
 const getPostById = (root, params) => {
   return fetch(`${env.BASE_URL}${env.END_POINT_POST}/${params.id}`)
         .then(res => res.json())
@@ -38,6 +47,7 @@ const getPostById = (root, params) => {
 const typeDefs = `
   type Query { 
     posts: [Post],
+    social: [Social],
     post(id: String!): Post
   }
  
@@ -49,6 +59,8 @@ const typeDefs = `
     date: String,
     totalShared: String,
     imgMedium: String,
+    imgLarge: String,
+    imgAltLarge: String,
     content: [Paragraph]!
   }
   
@@ -59,12 +71,21 @@ const typeDefs = `
     alt: String,
     caption: String
   }
+  
+  type Social { 
+    _id: String, 
+    type: String,
+    className: String,
+    url: String,
+    active: Boolean
+  }
 `;
 
 const resolvers = {
     Query: {
       posts: getPosts,
       post: getPostById,
+      social: getSocial,
     }
 };
 
